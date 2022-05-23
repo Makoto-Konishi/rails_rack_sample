@@ -31,3 +31,41 @@ run Rails.application
     Use Ctrl-C to stop
 
     ```
+  
+## 自作ミドルウェアの追加
+
+`lib/middlewares/upcase_middleware.rb`
+```ruby
+class UpcaseMiddleware
+  def initialize(app)
+    @app = app
+  end
+
+  def call(env)
+    status, headers, body = @app.call(env)
+    body.each { |s| s.gsub!(/ruby/i, 'RUBY') }
+    [status, headers, body]
+  end
+end
+```
+
+`config/environments/development.rb`
+```ruby
+require 'middlewares/upcase_middleware'
+
+Rails.application.configure do
+  
+  # 省略
+  
+  config.middleware.use UpcaseMiddleware # 自作ミドルウェアの読み込み
+end
+
+```
+追加されていることがわかる。
+[![Image from Gyazo](https://i.gyazo.com/08efab792064a5a47e9ac8331b1d61d6.png)](https://gyazo.com/08efab792064a5a47e9ac8331b1d61d6)
+
+`Rack::ETag`の後ろに追加してみる。
+```ruby
+config.middleware.insert_after Rack::ETag, UpcaseMiddleware
+```
+[![Image from Gyazo](https://i.gyazo.com/0132e87f189c268b18eebaffe83fe9c0.png)](https://gyazo.com/0132e87f189c268b18eebaffe83fe9c0)
